@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .futuristic-box {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            flex: 1;
+            margin: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2), 0 0 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            color: #000000;
+            text-align: center;
+        }
+
+        .traffic-light {
+            width: 60px;
+            height: 180px;
+            background-color: #333;
+            border-radius: 20px;
+            padding: 10px;
+            margin: 20px auto;
+        }
+
+        .light {
+            width: 40px;
+            height: 40px;
+            background-color: #444;
+            border-radius: 50%;
+            margin: 10px auto;
+        }
+
+        .light.red { background-color: red; }
+        .light.orange { background-color: orange; }
+        .light.green { background-color: green; }
+
+        #ultrasonicChart {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Current Traffic Data</h1>
+
+    <div class="container">
+        <div class="sensor-data futuristic-box">
+            <h2>Ultrasonic Sensor Data</h2>
+            <canvas id="ultrasonicChart"></canvas>
+        </div>
+
+        <div class="traffic-light-container futuristic-box">
+            <h2>Traffic Light</h2>
+            <div class="traffic-light">
+                <div class="light {% if traffic_light_state == 'red' %}red{% endif %}"></div>
+                <div class="light {% if traffic_light_state == 'orange' %}orange{% endif %}"></div>
+                <div class="light {% if traffic_light_state == 'green' %}green{% endif %}"></div>
+            </div>
+        </div>
+
+        <div class="current-image futuristic-box">
+            <h2>Current Image</h2>
+            {% if image_available %}
+                <img src="{{ url_for('get_current_image') }}" alt="Current Image" width="100%">
+            {% else %}
+                <p>No image available</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        async function fetchChartData() {
+            const response = await fetch('http://XXX.XXX.XXX.XXX:3000/chart_data');
+            const data = await response.json();
+            console.log('Fetched chart data:', data);  // Debug log
+            return data;
+        }
+
+        async function renderChart() {
+            const data = await fetchChartData();
+            // Ensure only the last 10 data points are used
+            const limitedData = data.slice(-10);
+
+            const ctx = document.getElementById('ultrasonicChart').getContext('2d');
+            const chartData = {
+                labels: limitedData.map(d => d.timestamp),
+                datasets: [{
+                    label: 'Distance (cm)',
+                    data: limitedData.map(d => d.distance),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                }]
+            };
+            const config = {
+                type: 'line',
+                data: chartData,
+                options: {
+                    plugins: {
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y;
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'minute',
+                                tooltipFormat: 'yyyy-MM-dd HH:mm:ss', // Date and time format for tooltips
+                                displayFormats: {
+                                    minute: 'yyyy-MM-dd HH:mm' // Date and time format for x-axis labels
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Timestamp'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Distance (cm)'
+                            }
+                        }
+                    }
+                }
+            };
+            console.log('Chart config:', config);  // Debug log
+            new Chart(ctx, config);
+        }
+
+        renderChart();
+
+        // Reload the page every 5 seconds
+        setInterval(() => {
+            location.reload();
+        }, 10000);
+    </script>
+</body>
+</html>
