@@ -4,6 +4,14 @@
 
 This project implements an IoT-based Intelligent Traffic Management System using ESP32-CAM modules and ultrasonic sensors. The system adjusts traffic light timings in real-time to optimize traffic flow, reduce congestion, and improve safety.
 
+**Required Packages for the OpenCV algorithm**
+
+    • https://github.com/pjreddie/darknet/blob/master/data/coco.names
+
+    • https://github.com/patrick013/Object-Detection---Yolov3/blob/master/model/yolov3.weights
+
+    • https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg
+
 **System Components**
 
     • ESP32-CAM: Captures images and sends them to the server via WiFi.
